@@ -39,10 +39,7 @@ __global__ void compute_kernel(vector3 *d_hPos,vector3 *d_hVel, double *d_mass){
 			d_hVel[i][k]+=accels[k]*INTERVAL;
 			d_hPos[i][k]+=d_hVel[i][k]*INTERVAL;
 		}
-
-
-
-
+        
     }
 }
 
