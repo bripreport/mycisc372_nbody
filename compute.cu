@@ -11,11 +11,8 @@ __global__ void compute_kernel(vector3 *d_hPos,vector3 *d_hVel, double *d_mass){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if( i < NUMENTITIES){
-        double *i_pos = d_hPos[i];
-
         vector3 accels = {0,0,0};
         for(int j = 0; j < NUMENTITIES; j++){
-            double *j_pos = d_hPos[j];
             if(i == j){
                 continue;
             }
@@ -23,7 +20,7 @@ __global__ void compute_kernel(vector3 *d_hPos,vector3 *d_hVel, double *d_mass){
                 vector3 distance;
 
                 for (int k=0;k<3;k++) {
-                    distance[k]=i_pos[k] - j_pos[k];
+                    distance[k]=d_hPos[i][k] - d_hPos[j][k];
                 }
                 
                 double magnitude_sq=distance[0]*distance[0]+distance[1]*distance[1]+distance[2]*distance[2];
@@ -35,11 +32,21 @@ __global__ void compute_kernel(vector3 *d_hPos,vector3 *d_hVel, double *d_mass){
                 }
             }
         }
+        
         for (int k=0;k<3;k++){
 			d_hVel[i][k]+=accels[k]*INTERVAL;
+		}
+
+    }
+}
+
+__global__ void update_pos_kernel(vector3 *d_hPos, vector3 *d_hVel){
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if(i < NUMENTITIES){
+        for (int k=0;k<3;k++){
 			d_hPos[i][k]+=d_hVel[i][k]*INTERVAL;
 		}
-        
     }
 }
 
@@ -61,6 +68,9 @@ extern "C" void compute(){
 
     //kernel
     compute_kernel<<<blocks,threads>>>(d_hPos,d_hVel,d_mass);
+    cudaDeviceSynchronize();
+
+    update_pos_kernel<<<blocks,threads>>>(d_hPos,d_hVel);
     cudaDeviceSynchronize();
 
 
