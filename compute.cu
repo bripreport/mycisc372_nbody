@@ -1,7 +1,17 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include "vector.h"
 #include "config.h"
+
+#define HANDLE_ERROR(call){ \
+    cudaError_t err = (call); \
+    if(err != cudaSuccess){ \
+        printf("CUDA Error: %s\n", cudaGetErrorString(err)); \
+        exit(1);\
+    }\
+}
+
 
 double *d_mass;
 
@@ -54,13 +64,13 @@ __global__ void update_pos_kernel(vector3 *d_hPos, vector3 *d_hVel){
 
 extern "C" void compute(){
 
-    cudaMalloc(&d_hPos, sizeof(vector3)*NUMENTITIES);
-    cudaMalloc(&d_hVel, sizeof(vector3)*NUMENTITIES);
-    cudaMalloc(&d_mass, sizeof(double)*NUMENTITIES);
+    HANDLE_ERROR( cudaMalloc(&d_hPos, sizeof(vector3)*NUMENTITIES) );
+    HANDLE_ERROR(cudaMalloc(&d_hVel, sizeof(vector3)*NUMENTITIES));
+    HANDLE_ERROR(cudaMalloc(&d_mass, sizeof(double)*NUMENTITIES));
 
-    cudaMemcpy(d_hPos,hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_hVel,hVel,sizeof(vector3)*NUMENTITIES, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_mass,mass,sizeof(double)*NUMENTITIES, cudaMemcpyHostToDevice);
+    HANDLE_ERROR(cudaMemcpy(d_hPos,hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_hVel,hVel,sizeof(vector3)*NUMENTITIES, cudaMemcpyHostToDevice));
+    HANDLE_ERROR(cudaMemcpy(d_mass,mass,sizeof(double)*NUMENTITIES, cudaMemcpyHostToDevice));
 
 
     int threads = 256;
@@ -68,15 +78,14 @@ extern "C" void compute(){
 
     //kernel
     compute_kernel<<<blocks,threads>>>(d_hPos,d_hVel,d_mass);
-    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaDeviceSynchronize());
 
     update_pos_kernel<<<blocks,threads>>>(d_hPos,d_hVel);
-    cudaDeviceSynchronize();
+    HANDLE_ERROR(cudaDeviceSynchronize());
 
-
-    cudaMemcpy(hPos,d_hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost);
-    cudaMemcpy(hVel,d_hVel,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost);
-    cudaMemcpy(mass,d_mass,sizeof(double)*NUMENTITIES, cudaMemcpyDeviceToHost);
+    HANDLE_ERROR(cudaMemcpy(hPos,d_hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(hVel,d_hVel,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost));
+    HANDLE_ERROR(cudaMemcpy(mass,d_mass,sizeof(double)*NUMENTITIES, cudaMemcpyDeviceToHost));
 
     cudaFree(d_hPos);
     cudaFree(d_hVel);
