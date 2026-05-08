@@ -46,11 +46,11 @@ __global__ void compute_kernel(vector3 *d_hPos,vector3 *d_hVel, double *d_mass, 
 extern "C" void compute(){
 
     cudaMalloc(&d_hPos, sizeof(vector3)*NUMENTITIES);
-    cudaMalloc(&d_hPos, sizeof(vector3)*NUMENTITIES);
+    cudaMalloc(&d_hVel, sizeof(vector3)*NUMENTITIES);
     cudaMalloc(&d_mass, sizeof(double)*NUMENTITIES);
 
     cudaMemcpy(d_hPos,hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_hPos,hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_hVel,hVel,sizeof(vector3)*NUMENTITIES, cudaMemcpyHostToDevice);
     cudaMemcpy(d_mass,mass,sizeof(double)*NUMENTITIES, cudaMemcpyHostToDevice);
 
 
@@ -63,7 +63,7 @@ extern "C" void compute(){
 
 
     cudaMemcpy(d_hPos,hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_hPos,hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost);
+    cudaMemcpy(d_hVel,hVel,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost);
     cudaMemcpy(d_mass,mass,sizeof(double)*NUMENTITIES, cudaMemcpyDeviceToHost);
 
     cudaFree(d_hPos);
