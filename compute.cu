@@ -6,19 +6,24 @@
 double *d_mass;
 
 
-__global__ void compute_kernel(vector3 *d_hPos,vector3 *d_hVel, double *d_mass, int ENTITIES){
+__global__ void compute_kernel(vector3 *d_hPos,vector3 *d_hVel, double *d_mass){
     
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    
 
     if( i < NUMENTITIES){
+        double *i_pos = d_hPos[i];
+
         vector3 accels = {0,0,0};
         for(int j = 0; j < NUMENTITIES; j++){
-            if(i != j){
+            double *j_pos = d_hPos[j];
+            if(i == j){
+                continue;
+            }
+            else{
                 vector3 distance;
 
                 for (int k=0;k<3;k++) {
-                    distance[k]=d_hPos[i][k] - d_hPos[j][k];
+                    distance[k]=i_pos[k] - j_pos[k];
                 }
                 
                 double magnitude_sq=distance[0]*distance[0]+distance[1]*distance[1]+distance[2]*distance[2];
@@ -58,13 +63,13 @@ extern "C" void compute(){
     int blocks = (NUMENTITIES+threads-1) / threads;
 
     //kernel
-    compute_kernel<<<blocks,threads>>>(d_hPos,d_hVel,d_mass,NUMENTITIES);
+    compute_kernel<<<blocks,threads>>>(d_hPos,d_hVel,d_mass);
     cudaDeviceSynchronize();
 
 
-    cudaMemcpy(d_hPos,hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_hVel,hVel,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost);
-    cudaMemcpy(d_mass,mass,sizeof(double)*NUMENTITIES, cudaMemcpyDeviceToHost);
+    cudaMemcpy(hPos,d_hPos,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost);
+    cudaMemcpy(hVel,d_hVel,sizeof(vector3)*NUMENTITIES, cudaMemcpyDeviceToHost);
+    cudaMemcpy(mass,d_mass,sizeof(double)*NUMENTITIES, cudaMemcpyDeviceToHost);
 
     cudaFree(d_hPos);
     cudaFree(d_hVel);
