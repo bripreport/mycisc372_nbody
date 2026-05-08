@@ -91,3 +91,11 @@ extern "C" void compute(){
     cudaFree(d_hVel);
     cudaFree(d_mass);
 }
+
+
+/*
+ * ChatGPT was used to help with final debugging, explaining existing code/functions, and correcting errors that showed up when compiling. 
+ * It was also used to help understand some C and CUDA-specific logic and address mistakes I made with syntax and pointers. 
+ * It helped with understanding the math of the computations and making sure I'm correctly using the global device and host variables properly.
+ * It also helped with making an error handling macro similar to ones seen in the notes, at an attempt to potentially catch issues I was facing where the position values would be heavily inconsistent.
+ */
